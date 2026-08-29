@@ -1,22 +1,22 @@
-defmodule Aimax.SpreadsheetModeTest do
+defmodule Compos.SpreadsheetModeTest do
   @moduledoc "Spreadsheet mode uses the text backend and rebuilds its app view."
 
   use ExUnit.Case
 
-  alias Aimax.Core.{Buffer, Editor, KeyDispatch, Session}
+  alias Compos.Core.{Buffer, Editor, KeyDispatch, Session}
 
   setup do
     Editor.minibuffer_close()
     Editor.set_pending([])
     Editor.delete_other_windows()
 
-    dir = Path.join(System.tmp_dir!(), "aimax-sheet-#{System.unique_integer([:positive])}")
+    dir = Path.join(System.tmp_dir!(), "compos-sheet-#{System.unique_integer([:positive])}")
     File.mkdir_p!(dir)
     path = Path.join(dir, "budget.sheet.json")
 
     on_exit(fn ->
-      for buffer <- Aimax.Core.list_buffers(), String.contains?(buffer, dir) do
-        Aimax.Core.kill_buffer(buffer)
+      for buffer <- Compos.Core.list_buffers(), String.contains?(buffer, dir) do
+        Compos.Core.kill_buffer(buffer)
       end
 
       File.rm_rf!(dir)
@@ -43,8 +43,8 @@ defmodule Aimax.SpreadsheetModeTest do
     assert Buffer.text(buffer) =~ "@univerjs/preset-sheets-drawing@0.25.1"
     assert Buffer.text(buffer) =~ "UniverSheetsCorePreset"
     assert Buffer.text(buffer) =~ "UniverSheetsDrawingPreset"
-    assert Buffer.text(buffer) =~ "api.registerComponent('AimaxChart',AimaxChart)"
-    assert {:ok, _} = Session.eval(~s{(load-theme "aimax-dark")})
+    assert Buffer.text(buffer) =~ "api.registerComponent('ComposChart',ComposChart)"
+    assert {:ok, _} = Session.eval(~s{(load-theme "compos-dark")})
     assert Buffer.text(buffer) =~ ~s(<meta name="color-scheme" content="dark">)
     assert Buffer.text(buffer) =~ "color-scheme:dark"
     assert Buffer.text(buffer) =~ "made=create({darkMode:true,locale:"
@@ -60,7 +60,7 @@ defmodule Aimax.SpreadsheetModeTest do
     assert Buffer.text(buffer) =~ "echarts.init(ref.current,null)"
     refute Buffer.text(buffer) =~ "if(api.toggleDarkMode)api.toggleDarkMode(true)"
 
-    assert {:ok, _} = Session.eval(~s{(load-theme "aimax-dark")})
+    assert {:ok, _} = Session.eval(~s{(load-theme "compos-dark")})
     assert Buffer.text(buffer) =~ "addFloatDomToPosition"
     refute Buffer.text(buffer) =~ "addFloatDomToRange"
     assert Buffer.text(buffer) =~ "initialChartPosition"
@@ -70,7 +70,7 @@ defmodule Aimax.SpreadsheetModeTest do
     assert Buffer.text(buffer) =~ "initPosition:initialChartPosition(sheet,spec.anchor)"
     assert Buffer.text(buffer) =~ "api.Enum.DrawingType.DRAWING_CHART"
     assert Buffer.text(buffer) =~ "existing.type!==chartType"
-    assert Buffer.text(buffer) =~ ".aimax-chart>*{pointer-events:none}"
+    assert Buffer.text(buffer) =~ ".compos-chart>*{pointer-events:none}"
     refute Buffer.text(buffer) =~ "allowTransform:false"
     assert Buffer.text(buffer) =~ "getFloatDomById"
     assert Buffer.text(buffer) =~ "updateFloatDom"
@@ -86,9 +86,9 @@ defmodule Aimax.SpreadsheetModeTest do
     assert Buffer.text(buffer) =~ "univerSnapshot"
     assert Buffer.text(buffer) =~ "book.save()"
     assert Buffer.text(buffer) =~ "getRange('A1').activate()"
-    assert Buffer.text(buffer) =~ "aimax:'request-focus'"
+    assert Buffer.text(buffer) =~ "compos:'request-focus'"
     assert Buffer.text(buffer) =~ "book.setActiveSheet(sheets[wanted])"
-    assert Buffer.text(buffer) =~ "_aimax/spreadsheet"
+    assert Buffer.text(buffer) =~ "_compos/spreadsheet"
 
     stored = File.read!(path)
     assert :ok = KeyDispatch.handle_key("C-x")
@@ -160,7 +160,7 @@ defmodule Aimax.SpreadsheetModeTest do
              ])
 
     stored = Jason.decode!(File.read!(path))
-    chart = get_in(stored, ["extensions", "aimax", "charts", Access.at(0)])
+    chart = get_in(stored, ["extensions", "compos", "charts", Access.at(0)])
 
     assert chart == %{
              "id" => "monthly-spend",
@@ -172,7 +172,7 @@ defmodule Aimax.SpreadsheetModeTest do
            }
 
     assert true == call!("spreadsheet-delete-chart!", [buffer, "monthly-spend"])
-    assert get_in(Jason.decode!(File.read!(path)), ["extensions", "aimax", "charts"]) == []
+    assert get_in(Jason.decode!(File.read!(path)), ["extensions", "compos", "charts"]) == []
   end
 
   test "agents can create a chart without choosing its ID or anchor", %{path: path} do
